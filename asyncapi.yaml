@@ -1,0 +1,487 @@
+asyncapi: 2.6.0
+
+info:
+  title: Booking and Vehicle Records Events API
+  version: 1.0.0
+  description: AsyncAPI specification for booking events and vehicle records event processing.
+
+servers:
+  production:
+    url: broker.example.com
+    protocol: kafka
+    description: Production message broker
+
+  local:
+    url: localhost:9092
+    protocol: kafka
+    description: Local Kafka broker
+
+channels:
+  booking.created:
+    description: Event published when a new booking is created.
+    publish:
+      summary: Booking created
+      operationId: publishBookingCreated
+      message:
+        $ref: "#/components/messages/BookingCreated"
+
+  booking.updated:
+    description: Event published when booking details are updated.
+    publish:
+      summary: Booking updated
+      operationId: publishBookingUpdated
+      message:
+        $ref: "#/components/messages/BookingUpdated"
+
+  booking.cancelled:
+    description: Event published when a booking is cancelled.
+    publish:
+      summary: Booking cancelled
+      operationId: publishBookingCancelled
+      message:
+        $ref: "#/components/messages/BookingCancelled"
+
+  booking.completed:
+    description: Event published when a booking is completed.
+    publish:
+      summary: Booking completed
+      operationId: publishBookingCompleted
+      message:
+        $ref: "#/components/messages/BookingCompleted"
+
+  vehicle.record.created:
+    description: Event published when a new vehicle record is created.
+    publish:
+      summary: Vehicle record created
+      operationId: publishVehicleRecordCreated
+      message:
+        $ref: "#/components/messages/VehicleRecordCreated"
+
+  vehicle.record.updated:
+    description: Event published when vehicle information is updated.
+    publish:
+      summary: Vehicle record updated
+      operationId: publishVehicleRecordUpdated
+      message:
+        $ref: "#/components/messages/VehicleRecordUpdated"
+
+  vehicle.record.deleted:
+    description: Event published when a vehicle record is deleted.
+    publish:
+      summary: Vehicle record deleted
+      operationId: publishVehicleRecordDeleted
+      message:
+        $ref: "#/components/messages/VehicleRecordDeleted"
+
+  vehicle.status.updated:
+    description: Event published when a vehicle status is changed.
+    publish:
+      summary: Vehicle status updated
+      operationId: publishVehicleStatusUpdated
+      message:
+        $ref: "#/components/messages/VehicleStatusUpdated"
+
+components:
+  messages:
+    BookingCreated:
+      name: BookingCreated
+      title: Booking Created
+      summary: Message sent when a new booking is created.
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/BookingCreatedPayload"
+
+    BookingUpdated:
+      name: BookingUpdated
+      title: Booking Updated
+      summary: Message sent when booking information is updated.
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/BookingUpdatedPayload"
+
+    BookingCancelled:
+      name: BookingCancelled
+      title: Booking Cancelled
+      summary: Message sent when a booking is cancelled.
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/BookingCancelledPayload"
+
+    BookingCompleted:
+      name: BookingCompleted
+      title: Booking Completed
+      summary: Message sent when a booking is completed.
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/BookingCompletedPayload"
+
+    VehicleRecordCreated:
+      name: VehicleRecordCreated
+      title: Vehicle Record Created
+      summary: Message sent when a new vehicle record is created.
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/VehicleRecordCreatedPayload"
+
+    VehicleRecordUpdated:
+      name: VehicleRecordUpdated
+      title: Vehicle Record Updated
+      summary: Message sent when vehicle record information is updated.
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/VehicleRecordUpdatedPayload" 
+VehicleRecordDeleted:
+      name: VehicleRecordDeleted
+      title: Vehicle Record Deleted
+      summary: Message sent when a vehicle record is deleted.
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/VehicleRecordDeletedPayload"
+
+    VehicleStatusUpdated:
+      name: VehicleStatusUpdated
+      title: Vehicle Status Updated
+      summary: Message sent when vehicle availability or operational status changes.
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/VehicleStatusUpdatedPayload"
+
+  schemas:
+    Booking:
+      type: object
+      required:
+        - id
+        - userId
+        - vehicleId
+        - startDate
+        - endDate
+        - status
+        - totalPrice
+        - currency
+      properties:
+        id:
+          type: string
+          example: booking_123
+        userId:
+          type: string
+          example: user_456
+        vehicleId:
+          type: string
+          example: vehicle_789
+        startDate:
+          type: string
+          format: date-time
+          example: "2026-06-01T10:00:00Z"
+        endDate:
+          type: string
+          format: date-time
+          example: "2026-06-05T18:00:00Z"
+        status:
+          type: string
+          enum:
+            - pending
+            - confirmed
+            - cancelled
+            - completed
+          example: confirmed
+        totalPrice:
+          type: number
+          format: float
+          example: 350.00
+        currency:
+          type: string
+          example: USD
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-05-23T10:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-05-23T10:30:00Z"
+
+    VehicleRecord:
+      type: object
+      required:
+        - id
+        - vin
+        - make
+        - model
+        - year
+        - status
+      properties:
+        id:
+          type: string
+          example: vehicle_789
+        vin:
+          type: string
+          example: 1HGCM82633A004352
+        make:
+          type: string
+          example: Toyota
+        model:
+          type: string
+          example: Corolla
+        year:
+          type: integer
+          example: 2022
+        licensePlate:
+          type: string
+          example: AA1234BB
+        mileage:
+          type: integer
+          example: 45000
+        status:
+          type: string
+          enum:
+            - available
+            - booked
+            - maintenance
+            - inactive
+          example: available
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-05-23T09:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-05-23T09:30:00Z"
+
+    BookingCreatedPayload:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - occurredAt
+        - data
+      properties:
+        eventId:
+          type: string
+          example: evt_001
+        eventType:
+          type: string
+          example: booking.created
+        occurredAt:
+          type: string
+          format: date-time
+          example: "2026-05-23T10:00:00Z"
+        data:
+          $ref: "#/components/schemas/Booking"
+
+    BookingUpdatedPayload:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - occurredAt
+        - data
+      properties:
+        eventId:
+          type: string
+          example: evt_002
+        eventType:
+          type: string
+          example: booking.updated
+        occurredAt:
+          type: string
+          format: date-time
+          example: "2026-05-23T11:00:00Z"
+        data:
+          $ref: "#/components/schemas/Booking"
+
+    BookingCancelledPayload:
+      type: object
+required:
+        - eventId
+        - eventType
+        - occurredAt
+        - data
+      properties:
+        eventId:
+          type: string
+          example: evt_003
+        eventType:
+          type: string
+          example: booking.cancelled
+        occurredAt:
+          type: string
+          format: date-time
+          example: "2026-05-23T12:00:00Z"
+        data:
+          type: object
+          required:
+            - bookingId
+            - userId
+            - vehicleId
+            - reason
+          properties:
+            bookingId:
+              type: string
+              example: booking_123
+            userId:
+              type: string
+              example: user_456
+            vehicleId:
+              type: string
+              example: vehicle_789
+            reason:
+              type: string
+              example: User cancelled the booking
+
+    BookingCompletedPayload:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - occurredAt
+        - data
+      properties:
+        eventId:
+          type: string
+          example: evt_004
+        eventType:
+          type: string
+          example: booking.completed
+        occurredAt:
+          type: string
+          format: date-time
+          example: "2026-06-05T18:00:00Z"
+        data:
+          type: object
+          required:
+            - bookingId
+            - userId
+            - vehicleId
+            - completedAt
+          properties:
+            bookingId:
+              type: string
+              example: booking_123
+            userId:
+              type: string
+              example: user_456
+            vehicleId:
+              type: string
+              example: vehicle_789
+            completedAt:
+              type: string
+              format: date-time
+              example: "2026-06-05T18:00:00Z"
+
+    VehicleRecordCreatedPayload:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - occurredAt
+        - data
+      properties:
+        eventId:
+          type: string
+          example: evt_005
+        eventType:
+          type: string
+          example: vehicle.record.created
+        occurredAt:
+          type: string
+          format: date-time
+          example: "2026-05-23T09:00:00Z"
+        data:
+          $ref: "#/components/schemas/VehicleRecord"
+
+    VehicleRecordUpdatedPayload:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - occurredAt
+        - data
+      properties:
+        eventId:
+          type: string
+          example: evt_006
+        eventType:
+          type: string
+          example: vehicle.record.updated
+        occurredAt:
+          type: string
+          format: date-time
+          example: "2026-05-23T09:30:00Z"
+        data:
+          $ref: "#/components/schemas/VehicleRecord"
+
+    VehicleRecordDeletedPayload:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - occurredAt
+        - data
+      properties:
+        eventId:
+          type: string
+          example: evt_007
+        eventType:
+          type: string
+          example: vehicle.record.deleted
+        occurredAt:
+          type: string
+          format: date-time
+          example: "2026-05-23T10:00:00Z"
+        data:
+          type: object
+          required:
+            - vehicleId
+          properties:
+            vehicleId:
+              type: string
+              example: vehicle_789
+
+    VehicleStatusUpdatedPayload:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - occurredAt
+        - data
+      properties:
+        eventId:
+          type: string
+          example: evt_008
+        eventType:
+          type: string
+          example: vehicle.status.updated
+        occurredAt:
+          type: string
+format: date-time
+          example: "2026-05-23T13:00:00Z"
+        data:
+          type: object
+          required:
+            - vehicleId
+            - oldStatus
+            - newStatus
+          properties:
+            vehicleId:
+              type: string
+              example: vehicle_789
+            oldStatus:
+              type: string
+              enum:
+                - available
+                - booked
+                - maintenance
+                - inactive
+              example: available
+            newStatus:
+              type: string
+              enum:
+                - available
+                - booked
+                - maintenance
+                - inactive
+              example: booked
+            reason:
+              type: string
+              example: Vehicle was booked by user

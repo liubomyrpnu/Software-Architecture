@@ -1,0 +1,570 @@
+openapi: 3.0.3
+
+info:
+  title: Booking & Vehicle Records Service API
+  version: 1.0.0
+  description: |
+    API for managing vehicle records, service bookings, appointments,
+    maintenance history, and repair tracking in the Auto Service System.
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Bookings
+  - name: Vehicles
+  - name: Maintenance Records
+  - name: Health
+
+paths:
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint (Role: USER/MECHANIC/ADMIN)
+      description: Returns service health status.
+      operationId: healthCheck
+
+      parameters:
+        - $ref: '#/components/parameters/UserRoleHeader'
+
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+        '403':
+          description: Forbidden
+
+  /vehicles:
+    post:
+      tags:
+        - Vehicles
+      summary: Register vehicle (Role: USER or ADMIN)
+      description: Registers a new vehicle for a user account.
+      operationId: registerVehicle
+
+      parameters:
+        - $ref: '#/components/parameters/UserRoleHeader'
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleRequest'
+
+      responses:
+        '201':
+          description: Vehicle registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+
+        '400':
+          description: Invalid request payload
+
+        '403':
+          description: Forbidden
+
+    get:
+      tags:
+        - Vehicles
+      summary: Retrieve user vehicles (Role: USER or ADMIN)
+      description: Returns a list of registered user vehicles.
+      operationId: retrieveVehicles
+
+      parameters:
+        - $ref: '#/components/parameters/UserRoleHeader'
+
+      responses:
+        '200':
+          description: Vehicles retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VehicleResponse'
+
+        '403':
+          description: Forbidden
+
+  /vehicles/{vehicleId}:
+    get:
+      tags:
+        - Vehicles
+      summary: Retrieve vehicle details (Role: USER/MECHANIC/ADMIN)
+      description: Retrieves detailed information about a specific vehicle.
+      operationId: retrieveVehicle
+
+      parameters:
+        - $ref: '#/components/parameters/UserRoleHeader'
+
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        '200':
+          description: Vehicle retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+
+        '404':
+          description: Vehicle not found
+
+    put:
+      tags:
+        - Vehicles
+      summary: Update vehicle information (Role: USER or ADMIN)
+      description: Updates vehicle information.
+      operationId: updateVehicle
+
+      parameters:
+        - $ref: '#/components/parameters/UserRoleHeader'
+
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVehicleRequest'
+
+      responses:
+        '200':
+          description: Vehicle updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+
+        '404':
+          description: Vehicle not found
+
+  /bookings:
+    post:
+      tags:
+        - Bookings
+      summary: Create service booking (Role: USER)
+      description: Creates a new vehicle service appointment.
+      operationId: createBooking
+
+      parameters:
+        - $ref: '#/components/parameters/UserRoleHeader'
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+
+      responses:
+        '201':
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+
+        '400':
+          description: Invalid request payload
+
+        '403':
+          description: Forbidden
+
+    get:
+      tags:
+        - Bookings
+      summary: Retrieve bookings (Role: USER/MECHANIC/ADMIN)
+      description: Returns a paginated list of bookings.
+      operationId: retrieveBookings
+
+      parameters:
+        - $ref: '#/components/parameters/UserRoleHeader'
+
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - CONFIRMED
+              - IN_PROGRESS
+              - COMPLETED
+              - CANCELLED
+
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+
+      responses:
+        '200':
+          description: Bookings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBookingsResponse'
+
+  /bookings/{bookingId}/status:
+    patch:
+      tags:
+        - Bookings
+      summary: Update booking status (Role: MECHANIC or ADMIN)
+      description: Updates the current status of a booking.
+      operationId: updateBookingStatus
+
+      parameters:
+        - $ref: '#/components/parameters/UserRoleHeader'
+
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookingStatusRequest'
+
+      responses:
+        '200':
+          description: Booking status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+
+        '404':
+          description: Booking not found
+
+  /vehicles/{vehicleId}/maintenance-records:
+    post:
+      tags:
+        - Maintenance Records
+      summary: Add maintenance record (Role: MECHANIC or ADMIN)
+      description: Adds a maintenance or repair record to a vehicle.
+      operationId: addMaintenanceRecord
+
+      parameters:
+        - $ref: '#/components/parameters/UserRoleHeader'
+
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMaintenanceRecordRequest'
+
+      responses:
+        '201':
+          description: Maintenance record created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenanceRecordResponse'
+
+    get:
+      tags:
+        - Maintenance Records
+      summary: Retrieve maintenance history (Role: USER/MECHANIC/ADMIN)
+      description: Retrieves maintenance records for a vehicle.
+      operationId: retrieveMaintenanceRecords
+
+      parameters:
+        - $ref: '#/components/parameters/UserRoleHeader'
+
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        '200':
+          description: Maintenance records retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaintenanceRecordResponse'
+
+components:
+
+  parameters:
+    UserRoleHeader:
+      name: X-User-Role
+      in: header
+      required: true
+      description: Role provided by API Gateway for authorization checks.
+      schema:
+        type: string
+        enum:
+          - USER
+          - MECHANIC
+          - ADMIN
+
+  schemas:
+
+    CreateVehicleRequest:
+      type: object
+      required:
+        - brand
+        - model
+        - year
+        - vin
+
+      properties:
+        brand:
+          type: string
+          example: Toyota
+
+        model:
+          type: string
+          example: Corolla
+
+        year:
+          type: integer
+          example: 2020
+
+        vin:
+          type: string
+          example: JTDBR32E720042345
+
+        licensePlate:
+          type: string
+          example: AT1234BC
+
+    UpdateVehicleRequest:
+      type: object
+      properties:
+        brand:
+          type: string
+
+        model:
+          type: string
+
+        year:
+          type: integer
+
+        licensePlate:
+          type: string
+
+    VehicleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+
+        ownerUserId:
+          type: string
+          format: uuid
+
+        brand:
+          type: string
+
+        model:
+          type: string
+
+        year:
+          type: integer
+
+        vin:
+          type: string
+
+        licensePlate:
+          type: string
+
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateBookingRequest:
+      type: object
+      required:
+        - vehicleId
+        - serviceType
+        - appointmentDate
+
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+
+        serviceType:
+          type: string
+          example: Oil Change
+
+        appointmentDate:
+          type: string
+          format: date-time
+
+        notes:
+          type: string
+          maxLength: 1000
+
+    UpdateBookingStatusRequest:
+      type: object
+      required:
+        - status
+
+      properties:
+        status:
+          type: string
+          enum:
+            - CONFIRMED
+            - IN_PROGRESS
+            - COMPLETED
+            - CANCELLED
+
+    BookingResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+
+        vehicleId:
+          type: string
+          format: uuid
+
+        userId:
+          type: string
+          format: uuid
+
+        serviceType:
+          type: string
+
+        appointmentDate:
+          type: string
+          format: date-time
+
+        status:
+          type: string
+          enum:
+            - PENDING
+            - CONFIRMED
+            - IN_PROGRESS
+            - COMPLETED
+            - CANCELLED
+
+        notes:
+          type: string
+
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateMaintenanceRecordRequest:
+      type: object
+      required:
+        - description
+        - mileage
+
+      properties:
+        description:
+          type: string
+          example: Engine oil and filter replacement
+
+        mileage:
+          type: integer
+          example: 120000
+
+        serviceDate:
+          type: string
+          format: date-time
+
+    MaintenanceRecordResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+
+        vehicleId:
+          type: string
+          format: uuid
+
+        description:
+          type: string
+
+        mileage:
+          type: integer
+
+        serviceDate:
+          type: string
+          format: date-time
+
+        createdByUserId:
+          type: string
+          format: uuid
+
+    PaginatedBookingsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingResponse'
+
+        page:
+          type: integer
+
+        pageSize:
+          type: integer
+
+        totalItems:
+          type: integer
+
+        totalPages:
+          type: integer
